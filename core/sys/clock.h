@@ -78,7 +78,7 @@
 #ifdef CLOCK_CONF_SECOND
 #define CLOCK_SECOND CLOCK_CONF_SECOND
 #else
-#define CLOCK_SECOND (clock_time_t)32
+#define CLOCK_SECOND 32
 #endif
 
 /**
