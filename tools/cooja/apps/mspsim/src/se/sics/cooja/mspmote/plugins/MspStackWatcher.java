@@ -31,126 +31,180 @@
 package se.sics.cooja.mspmote.plugins;
 
 import java.awt.BorderLayout;
-import java.awt.GridLayout;
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Observable;
-import java.util.Observer;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 
-import javax.swing.JButton;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
+import javax.swing.JToggleButton;
+import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
+import org.jdom.Element;
 
 import se.sics.cooja.ClassDescription;
 import se.sics.cooja.GUI;
 import se.sics.cooja.Mote;
 import se.sics.cooja.MotePlugin;
+import se.sics.cooja.MoteTimeEvent;
 import se.sics.cooja.PluginType;
 import se.sics.cooja.Simulation;
 import se.sics.cooja.SupportedArguments;
 import se.sics.cooja.VisPlugin;
 import se.sics.cooja.mspmote.MspMote;
+import se.sics.cooja.mspmote.MspMoteType;
 import se.sics.mspsim.core.MSP430;
+import se.sics.mspsim.core.Memory.AccessMode;
+import se.sics.mspsim.core.RegisterMonitor;
 import se.sics.mspsim.ui.StackUI;
-import se.sics.mspsim.util.Utils;
 
 @ClassDescription("Msp Stack Watcher")
 @PluginType(PluginType.MOTE_PLUGIN)
-@SupportedArguments(motes = {MspMote.class})
+@SupportedArguments(motes = { MspMote.class })
 public class MspStackWatcher extends VisPlugin implements MotePlugin {
   private static Logger logger = Logger.getLogger(MspStackWatcher.class);
 
-  private MspMote mspMote;
-  private MSP430 cpu;
-  private StackUI stackUI;
-
   private Simulation simulation;
-  private Observer stackObserver = null;
-  private JButton startButton;
-  private JButton stopButton;
+  private MSP430 cpu;
+  private MspMote mspMote;
+
+  private StackUI stackUI;
+  private RegisterMonitor.Adapter registerMonitor = null;
+
+  private JToggleButton toggleButton;
+
+  private MoteTimeEvent increasePosTimeEvent;
 
   public MspStackWatcher(Mote mote, Simulation simulationToVisualize, GUI gui) {
-    super("Msp Stack Watcher", gui);
+    super("Msp Stack Watcher: " + mote, gui);
     this.mspMote = (MspMote) mote;
     cpu = mspMote.getCPU();
     simulation = simulationToVisualize;
 
     getContentPane().setLayout(new BorderLayout());
 
-    // Register as stack observable
-    if (stackObserver == null) {
-      mspMote.getStackOverflowObservable().addObserver(stackObserver = new Observer() {
-        public void update(Observable obs, Object obj) {
-          simulation.stopSimulation();
-          JOptionPane.showMessageDialog(
-              MspStackWatcher.this,
-              "Bad memory access!\nSimulation stopped.\n" +
-              "\nCurrent stack pointer = 0x" + Utils.hex16(cpu.reg[MSP430.SP]) +
-              "\nStart of heap = 0x" + Utils.hex16(cpu.getDisAsm().getMap().heapStartAddress),
-              "Stack overflow", JOptionPane.ERROR_MESSAGE
-          );
+    toggleButton = new JToggleButton("Click to monitor for stack overflows");
+    toggleButton.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        if (toggleButton.isSelected()) {
+          toggleButton.setText("Monitoring for stack overflows");
+          if (!activate()) {
+            toggleButton.setBackground(Color.RED);
+            toggleButton.setText("Monitoring for stack overflows - FAILED!");
+            toggleButton.setSelected(false);
+          }
+          toggleButton.setBackground(null);
+        } else {
+          toggleButton.setBackground(null);
+          toggleButton.setText("Click to monitor for stack overflows");
+          deactivate();
         }
-      });
-    }
-
-    // Create stack overflow controls
-    startButton = new JButton("Stop simulation on stack overflow");
-    startButton.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        startButton.setEnabled(false);
-        stopButton.setEnabled(true);
-
-        mspMote.monitorStack(true);
       }
     });
 
-    stopButton = new JButton("Cancel");
-    stopButton.setEnabled(false);
-    stopButton.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        startButton.setEnabled(true);
-        stopButton.setEnabled(false);
-
-        mspMote.monitorStack(false);
-      }
-    });
-
-    // Create nfi's stack viewer
-    stackUI = new StackUI(cpu);
-    stackUI.init("MSPSim stack", mspMote.registry);
+    /* Create Mspsim stack viewer */
+    stackUI = new StackUI(cpu, -1); /* Needs manual updates */
+    stackUI.init("Stack usage", mspMote.registry);
     stackUI.start();
-
-    // Register as log listener
-    /*if (logObserver == null && mspMote.getInterfaces().getLog() != null) {
-      mspMote.getInterfaces().getLog().addObserver(logObserver = new Observer() {
-        public void update(Observable obs, Object obj) {
-          stackUI.addNote(mspMote.getInterfaces().getLog().getLastLogMessage());
-        }
-      });
-    }*/
-
-    JPanel controlPanel = new JPanel(new GridLayout(2,1));
-    controlPanel.add(startButton);
-    controlPanel.add(stopButton);
+    increasePosTimeEvent = new MoteTimeEvent(mspMote, 0) {
+      public void execute(long t) {
+        stackUI.requestIncreasePos();
+        simulation.scheduleEvent(this, t + Simulation.MILLISECOND);
+      }
+    };
+    simulation.scheduleEvent(increasePosTimeEvent, simulation.getSimulationTime());
 
     add(BorderLayout.CENTER, stackUI);
-    add(BorderLayout.SOUTH, controlPanel);
+    add(BorderLayout.SOUTH, toggleButton);
 
-    setSize(240, 300);
+    setSize(400, 300);
+  }
 
-    // Tries to select this plugin
+  private boolean activate() {
     try {
-      setSelected(true);
-    } catch (java.beans.PropertyVetoException e) {
-      // Could not select
+      int stack = ((MspMoteType) mspMote.getType()).getELF().getMap().stackStartAddress; 
+      int heap = ((MspMoteType) mspMote.getType()).getELF().getMap().heapStartAddress;
+      if (stack < 0) {
+        stack = cpu.config.ramStart + cpu.config.ramSize;
+      }
+      logger.debug("SP starts at: 0x" + Integer.toHexString(stack));
+      logger.debug("Heap starts at: 0x" + Integer.toHexString(heap));
+      logger.debug("Available stack: " + (stack-heap) + " bytes");
+      if (stack < 0 || heap < 0) {
+        return false;
+      }
+
+      /*final int stackStartAddress = stack;*/
+      final int heapStartAddress = heap;
+      registerMonitor = new RegisterMonitor.Adapter() {
+        public void notifyWriteBefore(int register, final int sp, AccessMode mode) {
+          /*logger.debug("SP is now: 0x" + Integer.toHexString(sp));*/
+          final int available = sp - heapStartAddress;
+          if (available <= 0) {
+            SwingUtilities.invokeLater(new Runnable() {
+              public void run() {
+                JOptionPane.showMessageDialog(GUI.getTopParentContainer(),
+                    String.format("Stack overflow!\n\n" +
+                    		"\tSP = 0x%05x\n" +
+                    		"\tHeap start = 0x%05x\n\n" +
+                    		"\tAvailable = %d\n", sp, heapStartAddress, available),
+                    		"Stack overflow on " + mspMote,
+                    JOptionPane.ERROR_MESSAGE);
+              }
+            });
+            simulation.stopSimulation();
+          }
+        }
+      };
+      cpu.addRegisterWriteMonitor(MSP430.SP, registerMonitor);
+    } catch (IOException e) {
+      logger.warn("Stack monitoring failed: " + e.getMessage(), e);
+      registerMonitor = null;
+      return false;
+    }
+    return true;
+  }
+
+  private void deactivate() {
+    if (registerMonitor != null) {
+      cpu.removeRegisterWriteMonitor(MSP430.SP, registerMonitor);
+      registerMonitor = null;
     }
   }
 
+  public Collection<Element> getConfigXML() {
+    ArrayList<Element> config = new ArrayList<Element>();
+    Element element;
+
+    element = new Element("monitoring");
+    element.setText("" + toggleButton.isSelected());
+    config.add(element);
+
+    return config;
+  }
+
+  public boolean setConfigXML(Collection<Element> configXML,
+      boolean visAvailable) {
+    for (Element element : configXML) {
+      if (element.getName().equals("monitoring")) {
+        boolean monitor = Boolean.parseBoolean(element.getText());
+        if (monitor) {
+          if (activate()) {
+            toggleButton.setSelected(true);
+          }
+        }
+      }
+    }
+    return true;
+  }
+
   public void closePlugin() {
-    mspMote.getStackOverflowObservable().deleteObserver(stackObserver);
+    increasePosTimeEvent.remove();
     stackUI.stop();
+    deactivate();
   }
 
   public Mote getMote() {

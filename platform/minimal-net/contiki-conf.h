@@ -161,7 +161,7 @@ typedef unsigned short uip_stats_t;
 #define UIP_CONF_DS6_NBR_NBU     100
 #define UIP_CONF_DS6_DEFRT_NBU   2
 #define UIP_CONF_DS6_PREFIX_NBU  5
-#define UIP_CONF_DS6_ROUTE_NBU   100
+#define UIP_CONF_MAX_ROUTES   100
 #define UIP_CONF_DS6_ADDR_NBU    10
 #define UIP_CONF_DS6_MADDR_NBU   0
 #define UIP_CONF_DS6_AADDR_NBU   0
@@ -175,5 +175,11 @@ typedef unsigned long clock_time_t;
 
 /* Not part of C99 but actually present */
 int strcasecmp(const char*, const char*);
+
+/* include the project config */
+/* PROJECT_CONF_H might be defined in the project Makefile */
+#ifdef PROJECT_CONF_H
+#include PROJECT_CONF_H
+#endif /* PROJECT_CONF_H */
 
 #endif /* __CONTIKI_CONF_H__ */

@@ -61,6 +61,8 @@ PROCINIT(&etimer_process, &tapdev_process, &tcpip_process, &serial_line_process)
 
 static uint16_t dag_id[] = {0x1111, 0x1100, 0, 0, 0, 0, 0, 0x0011};
 
+static void sprint_ip6(uip_ip6addr_t addr);
+
 PROCESS(border_router_process, "RPL Border Router");
 PROCESS_THREAD(border_router_process, ev, data)
 {
@@ -72,8 +74,8 @@ PROCESS_THREAD(border_router_process, ev, data)
   {
     rpl_dag_t *dag;
     char buf[sizeof(dag_id)];
-    memcpy(buf,dag_id,sizeof(dag_id));
-    dag = rpl_set_root((uip_ip6addr_t *)buf);
+    memcpy(buf, dag_id, sizeof(dag_id));
+    dag = rpl_set_root(RPL_DEFAULT_INSTANCE, (uip_ip6addr_t *)buf);
     
     /* Assign separate addresses to the uip stack and the host network
         interface, but with the same prefix E.g. bbbb::ff:fe00:200 to
@@ -94,7 +96,6 @@ PROCESS_THREAD(border_router_process, ev, data)
       
 #else
       {
-	static void sprint_ip6(uip_ip6addr_t addr);
 	int i;
 	uip_ip6addr_t ipaddr;
 #ifdef HARD_CODED_ADDRESS
@@ -192,21 +193,21 @@ main(void)
    bbbb::206:98ff:fe00:232 if non-RPL */
 #ifdef HARD_CODED_ADDRESS
   {
-  uip_ipaddr_t ipaddr;
-  uiplib_ipaddrconv(HARD_CODED_ADDRESS, &ipaddr);
-  if((ipaddr.u8[13] != 0) ||
-     (ipaddr.u8[14] != 0) ||
-     (ipaddr.u8[15] != 0)) {
-    if(sizeof(uip_lladdr) == 6) {  /* Minimal-net uses ethernet MAC */
-      uip_lladdr.addr[0] = 0x02;
-      uip_lladdr.addr[1] = 0;
-      uip_lladdr.addr[2] = 0;
-      uip_lladdr.addr[3] = ipaddr.u8[13];
-      uip_lladdr.addr[4] = ipaddr.u8[14];
-      uip_lladdr.addr[5] = ipaddr.u8[15];
+    uip_ipaddr_t ipaddr;
+    uiplib_ipaddrconv(HARD_CODED_ADDRESS, &ipaddr);
+    if((ipaddr.u8[13] != 0) ||
+       (ipaddr.u8[14] != 0) ||
+       (ipaddr.u8[15] != 0)) {
+      if(sizeof(uip_lladdr) == 6) {  /* Minimal-net uses ethernet MAC */
+	uip_lladdr.addr[0] = 0x02;
+	uip_lladdr.addr[1] = 0;
+	uip_lladdr.addr[2] = 0;
+	uip_lladdr.addr[3] = ipaddr.u8[13];
+	uip_lladdr.addr[4] = ipaddr.u8[14];
+	uip_lladdr.addr[5] = ipaddr.u8[15];
+      }
     }
   }
- }
 #endif /* HARD_CODED_ADDRESS */
 #endif /* UIP_CONF_IPV6 */
 
@@ -233,21 +234,21 @@ main(void)
 
     uip_gethostaddr(&addr);
     if(addr.u8[0] == 0) {
-      uip_ipaddr(&addr, 10,1,1,1);
+      uip_ipaddr(&addr, 192,168,2,2);
     }
     printf("IP Address:  %d.%d.%d.%d\n", uip_ipaddr_to_quad(&addr));
     uip_sethostaddr(&addr);
     
     uip_getnetmask(&addr);
     if(addr.u8[0] == 0) {
-      uip_ipaddr(&addr, 255,0,0,0);
+      uip_ipaddr(&addr, 255,255,255,0);
       uip_setnetmask(&addr);
     }
     printf("Subnet Mask: %d.%d.%d.%d\n", uip_ipaddr_to_quad(&addr));
     
     uip_getdraddr(&addr);
     if(addr.u8[0] == 0) {
-      uip_ipaddr(&addr, 10,1,1,100);
+      uip_ipaddr(&addr, 192,168,2,1);
       uip_setdraddr(&addr);
     }
     printf("Def. Router: %d.%d.%d.%d\n", uip_ipaddr_to_quad(&addr));

@@ -103,15 +103,15 @@ tapdev_init(void)
   }
 #endif /* Linux */
 
-  snprintf(buf, sizeof(buf), "ifconfig tap0 inet 192.168.1.1");
+  snprintf(buf, sizeof(buf), "ifconfig tap0 inet 192.168.2.1");
   system(buf);
   printf("%s\n", buf);
 #ifdef linux
   /* route add for linux */
-  snprintf(buf, sizeof(buf), "route add -net 172.16.0.0/16 gw 192.168.1.2");
+  snprintf(buf, sizeof(buf), "route add -net 172.16.0.0/16 gw 192.168.2.2");
 #else /* linux */
   /* route add for freebsd */
-  snprintf(buf, sizeof(buf), "route add -net 172.16.0.0/16 192.168.1.2");
+  snprintf(buf, sizeof(buf), "route add -net 172.16.0.0/16 192.168.2.2");
 #endif /* linux */
   
   system(buf);

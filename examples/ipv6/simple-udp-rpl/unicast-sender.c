@@ -38,8 +38,6 @@
 #include "net/uip-ds6.h"
 #include "net/uip-debug.h"
 
-#include "sys/node-id.h"
-
 #include "simple-udp.h"
 #include "servreg-hack.h"
 

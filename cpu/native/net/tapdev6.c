@@ -85,6 +85,7 @@ static unsigned long lasttime;
 static void do_send(void);
 uint8_t tapdev_send(uip_lladdr_t *lladdr);
 
+#if UIP_CONF_IPV6
 
 uint16_t
 tapdev_poll(void)
@@ -230,3 +231,4 @@ tapdev_exit(void)
 {
 }
 /*---------------------------------------------------------------------------*/
+#endif /* UIP_CONF_IPV6 */

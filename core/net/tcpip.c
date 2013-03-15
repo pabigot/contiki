@@ -419,6 +419,7 @@ eventhandler(process_event_t ev, process_data_t data)
       break;
 
     case PROCESS_EVENT_TIMER:
+      uip_len = 0;
       /* We get this event if one of our timers have expired. */
       {
         /* Check the clock so see if we should call the periodic uIP
@@ -765,7 +766,7 @@ PROCESS_THREAD(tcpip_process, ev, data)
   UIP_FALLBACK_INTERFACE.init();
 #endif
 /* initialize RPL if configured for using RPL */
-#if UIP_CONF_IPV6_RPL
+#if UIP_CONF_IPV6 && UIP_CONF_IPV6_RPL
   rpl_init();
 #endif /* UIP_CONF_IPV6_RPL */
 

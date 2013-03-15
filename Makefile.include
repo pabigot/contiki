@@ -57,29 +57,14 @@ CFLAGS += -DCONTIKI=1 -DCONTIKI_TARGET_$(TARGET_UPPERCASE)=1
 include $(CONTIKI)/core/net/rime/Makefile.rime
 include $(CONTIKI)/core/net/mac/Makefile.mac
 SYSTEM  = process.c procinit.c autostart.c elfloader.c profile.c \
-          timetable.c timetable-aggregate.c compower.c serial-line.c
+          compower.c serial-line.c
 THREADS = mt.c
 LIBS    = memb.c mmem.c timer.c list.c etimer.c ctimer.c energest.c rtimer.c stimer.c \
           print-stats.c ifft.c crc16.c random.c checkpoint.c ringbuf.c
 DEV     = nullradio.c
-NET     = netstack.c uip-debug.c packetbuf.c queuebuf.c packetqueue.c
 
-ifdef UIP_CONF_IPV6
-  CFLAGS += -DUIP_CONF_IPV6=1
-  UIP   = uip6.c tcpip.c psock.c uip-udp-packet.c uip-split.c \
-          resolv.c tcpdump.c uiplib.c simple-udp.c
-  NET   += $(UIP) uip-icmp6.c uip-nd6.c uip-packetqueue.c \
-          sicslowpan.c neighbor-attr.c neighbor-info.c uip-ds6.c uip-ds6-route.c
-  ifneq ($(UIP_CONF_RPL),0)
-    CFLAGS += -DUIP_CONF_IPV6_RPL=1
-    include $(CONTIKI)/core/net/rpl/Makefile.rpl
-  endif # UIP_CONF_RPL
-else # UIP_CONF_IPV6
-  UIP   = uip.c uiplib.c resolv.c tcpip.c psock.c hc.c uip-split.c uip-fw.c \
-          uip-fw-drv.c uip_arp.c tcpdump.c uip-neighbor.c uip-udp-packet.c \
-          uip-over-mesh.c dhcpc.c simple-udp.c
-  NET   += $(UIP) uaodv.c uaodv-rt.c
-endif # UIP_CONF_IPV6
+include $(CONTIKI)/core/net/Makefile.uip
+include $(CONTIKI)/core/net/rpl/Makefile.rpl
 
 CTK     = ctk.c
 CTKVNC  = $(CTK) ctk-vncserver.c libconio.c vnc-server.c vnc-out.c ctk-vncfont.c
@@ -104,10 +89,11 @@ PROJECT_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(PROJECT_SOURCEFI
 ### Include application makefiles
 
 ifdef APPS
-  APPDIRS += ${wildcard ${addprefix $(CONTIKI)/apps/, $(APPS)} \
+  APPDS = ${wildcard ${foreach DIR, $(APPDIRS), ${addprefix $(DIR)/, $(APPS)}}} \
+	     ${wildcard ${addprefix $(CONTIKI)/apps/, $(APPS)} \
 	     ${addprefix $(CONTIKI)/platform/$(TARGET)/apps/, $(APPS)} \
 	     $(APPS)}
-  APPINCLUDES = ${foreach APP, $(APPS), ${wildcard ${foreach DIR, $(APPDIRS), $(DIR)/Makefile.$(APP)}}}
+  APPINCLUDES = ${foreach APP, $(APPS), ${wildcard ${foreach DIR, $(APPDS), $(DIR)/Makefile.$(APP)}}}
   -include $(APPINCLUDES)
   APP_SOURCES = ${foreach APP, $(APPS), $($(APP)_src)}
   DSC_SOURCES = ${foreach APP, $(APPS), $($(APP)_dsc)}
@@ -131,6 +117,20 @@ else
   include $(target_makefile)
 endif
 
+ifdef PLATFORMAPPS
+  PLATFORMAPPDS = ${wildcard ${foreach DIR, $(APPDIRS), ${addprefix $(DIR)/, $(PLATFORMAPPS)}}} \
+	     ${wildcard ${addprefix $(CONTIKI)/apps/, $(PLATFORMAPPS)} \
+	     ${addprefix $(CONTIKI)/platform/$(TARGET)/apps/, $(PLATFORMAPPS)} \
+	     $(PLATFORMAPPS)}
+  PLATFORMAPPINCLUDES = ${foreach APP, $(PLATFORMAPPS), \
+      ${wildcard ${foreach DIR, $(PLATFORMAPPDS), $(DIR)/Makefile.$(APP)}}}
+  -include $(PLATFORMAPPINCLUDES)
+  PLATFORMAPP_SOURCES = ${foreach APP, $(PLATFORMAPPS), $($(APP)_src)}
+  CONTIKI_SOURCEFILES += $(PLATFORMAPP_SOURCES)
+  APPDS += $(PLATFORMAPPDS)
+endif
+
+
 ### Forward comma-separated list of arbitrary defines to the compiler
 
 COMMA := ,
@@ -144,7 +144,7 @@ CONTIKI_CPU_DIRS_CONCAT    = ${addprefix $(CONTIKI_CPU)/, \
                                $(CONTIKI_CPU_DIRS)}
 
 SOURCEDIRS = . $(PROJECTDIRS) $(CONTIKI_TARGET_DIRS_CONCAT) \
-             $(CONTIKI_CPU_DIRS_CONCAT) $(CONTIKIDIRS) $(APPDIRS) ${dir $(target_makefile)}
+             $(CONTIKI_CPU_DIRS_CONCAT) $(CONTIKIDIRS) $(APPDS) ${dir $(target_makefile)}
 
 vpath %.c $(SOURCEDIRS)
 vpath %.S $(SOURCEDIRS)
@@ -236,6 +236,8 @@ endif
 # Don't treat %.$(TARGET) as an intermediate file because it is
 # in fact the primary target.
 .PRECIOUS: %.$(TARGET)
+
+.DELETE_ON_ERROR: $@
 
 # Cancel the predefined implict rule for compiling and linking
 # a single C source into a binary to force GNU make to consider

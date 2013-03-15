@@ -80,7 +80,7 @@ CMD.EXE := $(shell echo)
 
 CUSTOM_RULE_C_TO_OBJECTDIR_O = 1
 $(OBJECTDIR)/%.o: %.c
-	$(CC) $(CFLAGS) --create-dep $< -o $(@:.o=.s)
+	$(CC) $(CFLAGS) --create-dep $(@:.o=.u) $< -o $(@:.o=.s)
 	@$(AS) $(ASFLAGS) $(@:.o=.s) -o $@
 	@sed -e "s!.s:!.o:!" -e "s!\t! !" < $(@:.o=.u) > $(@:.o=.d)
 	@rm -f $(@:.o=.s) $(@:.o=.u)
@@ -95,9 +95,13 @@ CUSTOM_RULE_C_TO_CO = 1
 	@rm -f $(@:.co=.s)
 
 %.eth: $(OBJECTDIR)/%.o
-	$(LD) -t module -m $@.map $< -o $@
+	$(LD) -o $@ -t module -m $@.map $<
 
 ifdef ETHERNET
 $(ETHERNET)-eth.S: $(ETHERNET).eth
-	co65 --code-label _$(ETHERNET) -o $@ $<
+	co65 -o $@ --code-label _$(ETHERNET) $<
 endif
+
+CUSTOM_RULE_LINK = 1
+%.$(TARGET): %.co $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) contiki-$(TARGET).a
+	$(LD) -o $@ $(LDFLAGS) $(TARGET_STARTFILES) ${filter-out %.a,$^} ${filter %.a,$^} $(TARGET_LIBFILES)

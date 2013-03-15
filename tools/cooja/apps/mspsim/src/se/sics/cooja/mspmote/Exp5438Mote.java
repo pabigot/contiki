@@ -33,8 +33,16 @@ import java.io.File;
 
 import org.apache.log4j.Logger;
 
+import se.sics.cooja.MoteInterface;
 import se.sics.cooja.Simulation;
+import se.sics.cooja.mspmote.interfaces.Msp802154Radio;
+import se.sics.mspsim.platform.GenericNode;
+import se.sics.mspsim.platform.ti.Exp1101Node;
+import se.sics.mspsim.platform.ti.Exp1120Node;
 import se.sics.mspsim.platform.ti.Exp5438Node;
+
+import com.thingsquare.cooja.mspsim.CC1101Radio;
+import com.thingsquare.cooja.mspsim.CC1120Radio;
 
 /**
  * @author Fredrik Osterlind
@@ -42,15 +50,36 @@ import se.sics.mspsim.platform.ti.Exp5438Node;
 public class Exp5438Mote extends MspMote {
   private static Logger logger = Logger.getLogger(Exp5438Mote.class);
 
-  public Exp5438Node exp5438Node = null;
-
+  public GenericNode exp5438Node = null;
+  private String desc = "";
+  
   public Exp5438Mote(MspMoteType moteType, Simulation sim) {
     super(moteType, sim);
   }
 
   protected boolean initEmulator(File fileELF) {
+	  /* Check radio type */
+	  exp5438Node = null;
+	  for (Class<? extends MoteInterface> clazz : getType().getMoteInterfaceClasses()) {
+		  if (clazz == CC1101Radio.class) {
+			  exp5438Node = new Exp1101Node();
+			  desc = "Exp5438+CC1101";
+			  break;
+		  } else if (clazz == CC1120Radio.class) {
+			  exp5438Node = new Exp1120Node();
+			  desc = "Exp5438+CC1120";
+			  break;
+		  } else if (clazz == Msp802154Radio.class) {
+			  exp5438Node = new Exp5438Node();
+			  desc = "Exp5438+CC2420";
+			  break;
+		  }
+	  }
+	  if (exp5438Node == null) {
+		  throw new IllegalStateException("unknown radio");
+	  }
+	  
     try {
-      exp5438Node = new Exp5438Node();
       registry = exp5438Node.getRegistry();
       prepareMote(fileELF, exp5438Node);
     } catch (Exception e) {
@@ -64,7 +93,7 @@ public class Exp5438Mote extends MspMote {
   }
 
   public String toString() {
-    return "Exp5438 " + getID();
+    return desc + " " + getID();
   }
 
 }

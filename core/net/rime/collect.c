@@ -157,7 +157,11 @@ MEMB(send_queue_memb, struct packetqueue_item, MAX_SENDING_QUEUE);
    queue, the system periodically sends a dummy packet to potential
    parents, i.e., neighbors with a lower rtmetric than we have but for
    which we do not yet have a link quality estimate. */
+#ifdef COLLECT_CONF_PROACTIVE_PROBING_INTERVAL
+#define PROACTIVE_PROBING_INTERVAL (random_rand() % (2 * COLLECT_CONF_PROACTIVE_PROBING_INTERVAL))
+#else /* COLLECT_CONF_PROACTIVE_PROBING_INTERVAL */
 #define PROACTIVE_PROBING_INTERVAL (random_rand() % CLOCK_SECOND * 60)
+#endif /* COLLECT_CONF_PROACTIVE_PROBING_INTERVAL */
 #define PROACTIVE_PROBING_REXMITS  15
 
 /* The ANNOUNCEMENT_SCAN_TIME defines for how long the Collect
@@ -641,8 +645,10 @@ send_queued_packet(struct collect_conn *c)
       ctimer_set(&c->transmit_after_scan_timer, ANNOUNCEMENT_SCAN_TIME,
                  send_queued_packet, c);
 #else /* COLLECT_CONF_WITH_LISTEN */
-      announcement_set_value(&c->announcement, RTMETRIC_MAX);
-      announcement_bump(&c->announcement);
+      if(c->is_router) {
+	announcement_set_value(&c->announcement, RTMETRIC_MAX);
+	announcement_bump(&c->announcement);
+      }
 #endif /* COLLECT_CONF_WITH_LISTEN */
 #endif /* COLLECT_ANNOUNCEMENTS */
     }
@@ -1256,7 +1262,9 @@ received_announcement(struct announcement *a, const rimeaddr_t *from,
 #if ! COLLECT_CONF_WITH_LISTEN
   if(value == RTMETRIC_MAX &&
      tc->rtmetric != RTMETRIC_MAX) {
-    announcement_bump(&tc->announcement);
+    if(tc->is_router) {
+      announcement_bump(&tc->announcement);
+    }
   }
 #endif /* COLLECT_CONF_WITH_LISTEN */
 }
@@ -1302,7 +1310,9 @@ collect_open(struct collect_conn *tc, uint16_t channels,
   announcement_register(&tc->announcement, channels,
 			received_announcement);
 #if ! COLLECT_CONF_WITH_LISTEN
-  announcement_set_value(&tc->announcement, RTMETRIC_MAX);
+  if(tc->is_router) {
+    announcement_set_value(&tc->announcement, RTMETRIC_MAX);
+  }
 #endif /* COLLECT_CONF_WITH_LISTEN */
 #endif /* !COLLECT_ANNOUNCEMENTS */
 
@@ -1470,8 +1480,10 @@ collect_send(struct collect_conn *tc, int rexmits)
       ctimer_set(&tc->transmit_after_scan_timer, ANNOUNCEMENT_SCAN_TIME,
                  send_queued_packet, tc);
 #else /* COLLECT_CONF_WITH_LISTEN */
-      announcement_set_value(&tc->announcement, RTMETRIC_MAX);
-      announcement_bump(&tc->announcement);
+      if(tc->is_router) {
+	announcement_set_value(&tc->announcement, RTMETRIC_MAX);
+	announcement_bump(&tc->announcement);
+      }
 #endif /* COLLECT_CONF_WITH_LISTEN */
 #endif /* COLLECT_ANNOUNCEMENTS */
 
