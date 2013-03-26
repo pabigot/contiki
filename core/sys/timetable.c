@@ -124,7 +124,7 @@ timetable_print(struct timetable *t)
 
   printf("---\n");
   for(i = 1; i < *t->ptr; ++i) {
-    printf("%s: %u\n", t->timestamps[i - 1].id, t->timestamps[i].time - time);
+    printf("%s: %u\n", t->timestamps[i - 1].id, (unsigned int)(t->timestamps[i].time - time));
     time = t->timestamps[i].time;
   }
 }
