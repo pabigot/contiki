@@ -639,7 +639,9 @@ dao_input(void)
     case RPL_OPTION_TRANSIT:
       /* The path sequence and control are ignored. */
       pathcontrol = buffer[i + 3];
+      (void)pathcontrol;
       pathsequence = buffer[i + 4];
+      (void)pathsequence;
       lifetime = buffer[i + 5];
       /* The parent address is also ignored. */
       break;
@@ -793,6 +795,10 @@ dao_ack_input(void)
   sequence = buffer[2];
   status = buffer[3];
 
+  (void)buffer_length;
+  (void)instance_id;
+  (void)sequence;
+  (void)status;
   PRINTF("RPL: Received a DAO ACK with sequence number %d and status %d from ",
     sequence, status);
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
