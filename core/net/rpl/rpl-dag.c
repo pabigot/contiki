@@ -1080,6 +1080,7 @@ rpl_process_parent_event(rpl_instance_t *instance, rpl_parent_t *p)
     return 0;
   }
 
+  (void)old_rank;
 #if DEBUG
   if(DAG_RANK(old_rank, instance) != DAG_RANK(instance->current_dag->rank, instance)) {
     PRINTF("RPL: Moving in the instance from rank %hu to %hu\n",
