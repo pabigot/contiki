@@ -635,6 +635,7 @@ uip_ds6_maddr_lookup(const uip_ipaddr_t *ipaddr)
 uip_ds6_aaddr_t *
 uip_ds6_aaddr_add(uip_ipaddr_t *ipaddr)
 {
+#if 0 < UIP_DS6_AADDR_NB
   if(uip_ds6_list_loop
      ((uip_ds6_element_t *)uip_ds6_if.aaddr_list, UIP_DS6_AADDR_NB,
       sizeof(uip_ds6_aaddr_t), ipaddr, 128,
@@ -643,6 +644,7 @@ uip_ds6_aaddr_add(uip_ipaddr_t *ipaddr)
     uip_ipaddr_copy(&locaaddr->ipaddr, ipaddr);
     return locaaddr;
   }
+#endif /* UIP_DS6_AADDR_NB */
   return NULL;
 }
 
@@ -660,11 +662,13 @@ uip_ds6_aaddr_rm(uip_ds6_aaddr_t *aaddr)
 uip_ds6_aaddr_t *
 uip_ds6_aaddr_lookup(uip_ipaddr_t *ipaddr)
 {
+#if 0 < UIP_DS6_AADDR_NB
   if(uip_ds6_list_loop((uip_ds6_element_t *)uip_ds6_if.aaddr_list,
 		       UIP_DS6_AADDR_NB, sizeof(uip_ds6_aaddr_t), ipaddr, 128,
 		       (uip_ds6_element_t **)&locaaddr) == FOUND) {
     return locaaddr;
   }
+#endif /* UIP_DS6_AADDR_NB */
   return NULL;
 }
 

@@ -237,7 +237,9 @@ typedef struct uip_ds6_netif {
   uint32_t retrans_timer;       /* in msec */
   uint8_t maxdadns;
   uip_ds6_addr_t addr_list[UIP_DS6_ADDR_NB];
+#if 0 < UIP_DS6_AADDR_NB
   uip_ds6_aaddr_t aaddr_list[UIP_DS6_AADDR_NB];
+#endif /* UIP_DS6_AADDR_NB */
   uip_ds6_maddr_t maddr_list[UIP_DS6_MADDR_NB];
 } uip_ds6_netif_t;
 
