@@ -272,7 +272,7 @@ struct namemap {
   uip_ipaddr_t ipaddr;
   uint8_t err;
 #if RESOLV_CONF_SUPPORTS_MDNS
-  int is_mdns:1, is_probe:1;
+  unsigned int is_mdns:1, is_probe:1;
 #endif
   char name[RESOLV_CONF_MAX_DOMAIN_NAME_SIZE + 1];
 };
