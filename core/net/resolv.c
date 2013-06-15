@@ -529,6 +529,7 @@ mdns_write_announce_records(unsigned char *queryptr, uint8_t *count)
         *queryptr++ = sizeof(struct dns_hdr);
       }
       ans = (struct dns_answer *)queryptr;
+      (void)ans;
 
       *queryptr++ = (uint8_t) ((NATIVE_DNS_TYPE) >> 8);
       *queryptr++ = (uint8_t) ((NATIVE_DNS_TYPE));
@@ -606,8 +607,6 @@ mdns_prep_host_announce_packet(void)
   unsigned char *queryptr;
 
   uint8_t total_answers = 0;
-
-  struct dns_answer *ans;
 
   /* Be aware that, unless `ARCH_DOESNT_NEED_ALIGNED_STRUCTS` is set,
    * writing directly to the uint16_t members of this struct is an error. */
