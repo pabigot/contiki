@@ -887,6 +887,7 @@ input_packet(void)
               remove_queued_packet(i, 0);
             }
 #else
+            (void)ret;
             if(detect_ack()) {
               remove_queued_packet(i, 1);
             } else {

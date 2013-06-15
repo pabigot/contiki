@@ -669,6 +669,7 @@ send_packet(void)
             off();
           }
 #else
+          (void)ret;
           if(detect_ack()) {
             got_strobe_ack = 1;
           } else {
@@ -710,6 +711,7 @@ send_packet(void)
         got_ack = 1;
       }
 #else
+      (void)ret;
       if(detect_ack()) {
         got_ack = 1;
       }

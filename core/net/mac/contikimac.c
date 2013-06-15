@@ -791,6 +791,7 @@ send_packet(mac_callback_t mac_callback, void *mac_callback_ptr,
       while(RTIMER_CLOCK_LT(RTIMER_NOW(), wt + INTER_PACKET_INTERVAL)) { }
 #else /* RDC_CONF_HARDWARE_ACK */
      /* Wait for the ACK packet */
+      (void)ret;
       wt = RTIMER_NOW();
       while(RTIMER_CLOCK_LT(RTIMER_NOW(), wt + INTER_PACKET_INTERVAL)) { }
 
