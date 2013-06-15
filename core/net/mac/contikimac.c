@@ -549,7 +549,6 @@ send_packet(mac_callback_t mac_callback, void *mac_callback_ptr,
   uint8_t got_strobe_ack = 0;
   int hdrlen, len;
   uint8_t is_broadcast = 0;
-  uint8_t is_reliable = 0;
   uint8_t is_known_receiver = 0;
   uint8_t collisions;
   int transmit_len;
@@ -599,8 +598,6 @@ send_packet(mac_callback_t mac_callback, void *mac_callback_ptr,
                packetbuf_addr(PACKETBUF_ADDR_RECEIVER)->u8[1]);
 #endif /* UIP_CONF_IPV6 */
   }
-  is_reliable = packetbuf_attr(PACKETBUF_ATTR_RELIABLE) ||
-    packetbuf_attr(PACKETBUF_ATTR_ERELIABLE);
 
   packetbuf_set_attr(PACKETBUF_ATTR_MAC_ACK, 1);
 
