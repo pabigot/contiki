@@ -66,6 +66,11 @@
 #include "net/resolv.h"
 #include "net/uip-udp-packet.h"
 #include "lib/random.h"
+#if RESOLV_CONF_SUPPORTS_MDNS
+/* Non-standard function declared here in lieu of identifying which
+ * toolchain-specific header provides it. */
+int strncasecmp(const char*, const char*, size_t);
+#endif
 
 #ifndef DEBUG
 #define DEBUG CONTIKI_TARGET_COOJA
