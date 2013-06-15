@@ -852,8 +852,6 @@ add_redrawwidget(struct ctk_widget *w)
 static void
 widget_redraw(struct ctk_widget *widget)
 {
-  struct ctk_window *window;
-
   if(mode != CTK_MODE_NORMAL || widget == NULL) {
     return;
   }
@@ -870,8 +868,8 @@ widget_redraw(struct ctk_widget *widget)
   if(menus.open == NULL)
 #endif /* CTK_CONF_MENUS */
   {
-    window = widget->window;
 #if CTK_CONF_WINDOWS
+    struct ctk_window *window = widget->window;
     if(window == dialog) {
       ctk_draw_widget(widget, CTK_FOCUS_DIALOG, 0, height);
     } else if(dialog == NULL &&
