@@ -13,8 +13,21 @@ AS       ?= as
 NM       ?= nm
 OBJCOPY  ?= objcopy
 STRIP    ?= strip
+
+# WERROR_C99: Unless defined to zero, adds -pedantic -std=c99 to the build
+# flags.  This is undesirable when including OS-specific headers like
+# <ucontext.h> as in native mtarch.c; these flags prevent definition of
+# required structures.
+WERROR_C99=1
+ifeq ($(WERROR_C99),0)
+CFLAGS_WERROR_C99=
+else # WERROR_C99 0
+ifeq ($(WERROR_C99),1)
+CFLAGS_WERROR_C99=-pedantic -std=c99
+endif # WERROR_C99 1
+endif # WERROR_C99 0
 ifdef WERROR
-CFLAGSWERROR=-Werror -pedantic -std=c99 -Werror
+CFLAGSWERROR=-Werror $(CFLAGS_WERROR_C99)
 endif
 CFLAGSNO = -Wall -g -I/usr/local/include $(CFLAGSWERROR)
 CFLAGS  += $(CFLAGSNO) -O
