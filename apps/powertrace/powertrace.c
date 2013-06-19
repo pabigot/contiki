@@ -294,6 +294,10 @@ sniffprint(char *prefix, int seqno)
   esender = packetbuf_addr(PACKETBUF_ADDR_ESENDER);
   ereceiver = packetbuf_addr(PACKETBUF_ADDR_ERECEIVER);
 
+  (void)sender;
+  (void)receiver;
+  (void)esender;
+  (void)ereceiver;
 
   printf("%lu %s %d %u %d %d %d.%d %u %u\n",
          clock_time(),
