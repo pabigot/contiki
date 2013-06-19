@@ -178,6 +178,7 @@ PROCESS_THREAD(shell_repeat_server_process, ev, data)
     strncpy(command_copy, command, MAX_COMMANDLENGTH);
     ret = shell_start_command(command_copy, (int)strlen(command_copy),
 			      &repeat_command, &started_process);
+    (void)ret;
     
     if(started_process != NULL &&
        process_is_running(started_process)) {
@@ -345,6 +346,7 @@ PROCESS_THREAD(shell_randwait_process, ev, data)
   
   ret = shell_start_command(command, (int)strlen(command),
 			    randwait_command.child, &started_process);
+  (void)ret;
   
   if(started_process != NULL &&
      process_is_running(started_process)) {
