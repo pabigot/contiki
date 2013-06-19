@@ -211,7 +211,7 @@ PROCESS_THREAD(shell_repeat_process, ev, data)
   static char command[MAX_COMMANDLENGTH];
   static struct etimer etimer;
   static int i;
-  static clock_time_t start_time;
+  static volatile clock_time_t start_time;
   const char *args, *next;
 
   if(ev == shell_event_input) {
@@ -264,6 +264,7 @@ PROCESS_THREAD(shell_repeat_process, ev, data)
       reps, period, command);*/
 
   start_time = clock_time();
+  (void)start_time;
   etimer_set(&etimer, CLOCK_SECOND * period);
   for(i = 0; reps == 0 || i < reps; ++i) {
 
