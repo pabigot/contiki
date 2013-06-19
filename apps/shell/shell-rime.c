@@ -295,7 +295,7 @@ static void
 recv_collect(const rimeaddr_t *originator, uint8_t seqno, uint8_t hops)
 {
   struct collect_msg collect_msg;
-  char *dataptr;
+  uint8_t *dataptr;
   rtimer_clock_t latency;
   int len;
 
