@@ -945,6 +945,7 @@ node_packet_received(struct unicast_conn *c, const rimeaddr_t *from)
        packet buffer and its attributes when sending the ACK. */
     rimeaddr_copy(&ack_to, packetbuf_addr(PACKETBUF_ADDR_SENDER));
     packet_seqno = packetbuf_attr(PACKETBUF_ATTR_PACKET_ID);
+    (void)packet_seqno;
 
     /* If the queue is more than half filled, we add the CONGESTED
        flag to our outgoing acks. */
