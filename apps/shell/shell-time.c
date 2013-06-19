@@ -207,7 +207,7 @@ repeat_print_usage(void)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(shell_repeat_process, ev, data)
 {
-  static int reps, period, period_left;
+  static int reps, period;
   static char command[MAX_COMMANDLENGTH];
   static struct etimer etimer;
   static int i;
@@ -276,14 +276,6 @@ PROCESS_THREAD(shell_repeat_process, ev, data)
 		       data == &shell_repeat_server_process);
     PROCESS_WAIT_UNTIL(etimer_expired(&etimer));
     etimer_reset(&etimer);
-    /*    PROCESS_PAUSE();
-
-    for(period_left = period;
-	period_left > 0;
-	period_left -= MIN(PERIOD_INTERVAL, period_left)) {
-      etimer_set(&etimer, CLOCK_SECOND * MIN(PERIOD_INTERVAL, period_left));
-      PROCESS_WAIT_UNTIL(etimer_expired(&etimer));
-      }*/
   }
   
 
