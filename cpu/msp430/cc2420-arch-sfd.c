@@ -41,10 +41,9 @@ extern volatile uint16_t cc2420_sfd_end_time;
 /* SFD interrupt for timestamping radio packets */
 ISR(TIMERB1, cc2420_timerb1_interrupt)
 {
-  int tbiv;
   ENERGEST_ON(ENERGEST_TYPE_IRQ);
   /* always read TBIV to clear IFG */
-  tbiv = TBIV;
+  (void)TBIV;
   if(CC2420_SFD_IS_1) {
     cc2420_sfd_counter++;
     cc2420_sfd_start_time = TBCCR1;
