@@ -344,7 +344,6 @@ static int
 cc2420_transmit(unsigned short payload_len)
 {
   int i, txpower;
-  uint8_t total_len;
 #if CC2420_CONF_CHECKSUM
   uint16_t checksum;
 #endif /* CC2420_CONF_CHECKSUM */
@@ -359,8 +358,6 @@ cc2420_transmit(unsigned short payload_len)
     set_txpower(packetbuf_attr(PACKETBUF_ATTR_RADIO_TXPOWER) - 1);
   }
 
-  total_len = payload_len + AUX_LEN;
-  
   /* The TX FIFO can only hold one packet. Make sure to not overrun
    * FIFO by waiting for transmission to start here and synchronizing
    * with the CC2420_TX_ACTIVE check in cc2420_send.
