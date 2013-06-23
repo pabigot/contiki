@@ -791,7 +791,7 @@ void halLcdPrint(char String[], unsigned char TextStyle)
 
     while (String[i] != 0)                  // Stop on null character
     {
-        LookUpChar = fonts_lookup[String[i]];
+        LookUpChar = fonts_lookup[(unsigned int)String[i]];
 
         for (j = 0; j < FONT_HEIGHT; j++)
         {
